@@ -2,12 +2,13 @@ package it.mauxilium.arduinostream.core;
 
 import it.mauxilium.arduinojavaserialrpc.ArduinoJavaSerialRpc;
 
-import java.util.LinkedList;
 import java.util.Spliterator;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 class ArduinoSpliterator<T> extends ArduinoJavaSerialRpc implements Spliterator<T> {
-    private LinkedList<T> buffer = new LinkedList<>();
+    private LinkedBlockingQueue<T> buffer = new LinkedBlockingQueue<>();
 
     public ArduinoSpliterator(String port, int baudRate) {
         super(port, baudRate);
@@ -19,9 +20,14 @@ class ArduinoSpliterator<T> extends ArduinoJavaSerialRpc implements Spliterator<
 
     @Override
     public boolean tryAdvance(Consumer<? super T> action) {
-        if (buffer.isEmpty() == false) {
-            action.accept(buffer.poll());
-        }
+        T value = null;
+        do {
+            try {
+                value = buffer.poll(100, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException ignored) { }
+        } while (value == null);
+
+        action.accept(value);
         return true;
     }
 

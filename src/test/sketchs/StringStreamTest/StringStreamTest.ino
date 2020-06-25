@@ -14,7 +14,6 @@ void serialEvent() {
   rpc.serialEventHandler();
 }
 
-void loop() {
-  // delay(1000);
+void loop() {  
   rpc.executeRemoteMethod("stream", "c="+String(streamCounter++));
 }
